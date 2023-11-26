@@ -19,7 +19,7 @@ module.exports = {
 		// Update files with the current version.
 		{ $ReplaceFileText: { filename: 'version.md', value: '${Package.version}' } },
 		{ $ReplaceFileText: { filename: 'readme.md', start_text: '(v', end_text: ')', value: '${Package.version}' } },
-		{ $ReplaceFileText: { filename: 'docs/_coverpage.md', start_text: '(v', end_text: ')', value: '${Package.version}' } },
+		// { $ReplaceFileText: { filename: 'docs/_coverpage.md', start_text: '(v', end_text: ')', value: '${Package.version}' } },
 
 	],
 
