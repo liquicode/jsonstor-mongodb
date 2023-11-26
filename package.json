@@ -1,6 +1,6 @@
 {
 	"name": "@liquicode/jsonstor-mongodb",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "A jsonstor adapter which stores documents on a MongoDB server.",
 	"license": "MIT",
 	"homepage": "http://jsonstor.liquicode.com",
