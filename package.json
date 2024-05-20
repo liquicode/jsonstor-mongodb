@@ -1,6 +1,6 @@
 {
 	"name": "@liquicode/jsonstor-mongodb",
-	"version": "0.0.2",
+	"version": "0.0.20",
 	"description": "A jsonstor adapter which stores documents on a MongoDB server.",
 	"license": "MIT",
 	"homepage": "http://jsonstor.liquicode.com",
@@ -16,6 +16,7 @@
 		}
 	],
 	"main": "src/jsonstor-mongodb.js",
+	"type": "commonjs",
 	"scripts": {
 		"test": "mocha -u bdd test/*.js --timeout 0 --slow 10 --colors",
 		"publish version": "npx @liquicode/devops --tasks .\\build\\devops.tasks.js publish_version",
@@ -27,14 +28,15 @@
 		"mongo query"
 	],
 	"devDependencies": {
+		"@liquicode/devops": "^0.0.20",
 		"mocha": "^10.2.0",
 		"webpack": "^5.89.0",
 		"webpack-cli": "^5.1.4",
 		"webpack-node-externals": "^3.0.0"
 	},
 	"dependencies": {
-		"@liquicode/jsongin": "0.0.11",
-		"@liquicode/jsonstor": "0.0.7",
+		"@liquicode/jsongin": "^0.0.20",
+		"@liquicode/jsonstor": "^0.0.20",
 		"mongodb": "^4.6.0"
 	}
 }

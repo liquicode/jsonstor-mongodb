@@ -1,6 +1,6 @@
 'use strict';
 
-const jsongin = require( '@liquicode/jsongin' )();
+const jsongin = require( '@liquicode/jsongin' );
 const MongoDB = require( 'mongodb' );
 
 
@@ -34,7 +34,7 @@ module.exports = {
 
 
 		//=====================================================================
-		async function WithStorage( api_callback )
+		async function WithStorage( Handler )
 		{
 			return new Promise(
 				async ( resolve, reject ) =>
@@ -59,7 +59,7 @@ module.exports = {
 						// Get the collection.
 						let collection = database.collection( Settings.CollectionName );
 						// Do the stuff.
-						let result = await api_callback( collection );
+						let result = await Handler( collection );
 						resolve( result );
 					}
 					catch ( error )
@@ -75,7 +75,7 @@ module.exports = {
 					}
 					return;
 				} );
-			return;
+			return; // Inaccessible code.
 		};
 
 
@@ -102,7 +102,8 @@ module.exports = {
 							{
 								if ( error.message === 'ns not found' )
 								{
-									resolve( false );
+									// resolve( false );
+									resolve( true );
 								}
 								else
 								{
@@ -314,6 +315,40 @@ module.exports = {
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
 								let db_cursor = await Collection.find( Criteria ).project( Projection );
+								if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during FindMany.` ); }
+								let documents = await db_cursor.toArray();
+								resolve( documents );
+							}
+							catch ( error )
+							{
+								reject( error );
+							}
+							return;
+						} );
+					return;
+				} );
+		};
+
+
+		//=====================================================================
+		// FindMany2
+		//=====================================================================
+
+
+		Storage.FindMany2 = async function FindMany2( Criteria, Projection, Sort, MaxCount, Options ) 
+		{
+			return await WithStorage(
+				async function ( Collection )
+				{
+					return new Promise(
+						async ( resolve, reject ) =>
+						{
+							try
+							{
+								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								let db_cursor = await Collection.find( Criteria ).project( Projection );
+								if ( db_cursor && Sort ) { db_cursor = await db_cursor.sort( Sort ); };
+								if ( db_cursor && MaxCount && ( MaxCount > 0 ) ) { db_cursor = await db_cursor.limit( MaxCount ); };
 								if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during FindMany.` ); }
 								let documents = await db_cursor.toArray();
 								resolve( documents );
