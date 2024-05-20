@@ -5,7 +5,7 @@ module.exports = {
 	Context:{
 		Package: require( '../package.json' ),
 		AWS_ProfileName: 'admin',
-		AWS_BucketName: 'jsonstor.liquicode.com',
+		AWS_BucketName: '',
 	},
 
 	run_tests: [
@@ -183,7 +183,7 @@ module.exports = {
 		},
 
 		// Rebuild the docs.
-		{ $RunTask: { task: 'build_docs' } },
+		// { $RunTask: { task: 'build_docs' } },
 
 		// Update github with the new version.
 		{
