@@ -10,58 +10,27 @@ module.exports = {
 
 	run_tests: [
 
-		// Run tests and capture the output.
+		// Run the shared conformance inventory against this adapter.
+		//
+		// A gate, not a report. tests.md is written by jsonstor-docs/build/run-all-tests.js,
+		// which runs this same command through the workspace and gathers every member's
+		// result into one place. Writing it here too would give the file two authors.
 		{
 			$Shell: {
 				command: 'npx mocha -u bdd test/*.js --timeout 0 --slow 10',
-				out: { filename: 'tests.md' },
+				out: { console: true },
 				err: { console: true },
 			}
 		},
-		{ $PrependTextFile: { filename: 'tests.md', value: '```\n' } },
-		{ $AppendTextFile: { filename: 'tests.md', value: '```\n' } },
 
 	],
 
-	build_docs: [
-
-		// // Generate: Command Reference.md
-		// {
-		// 	$ExecuteEjs: {
-		// 		ejs_file: 'docs/templates/Command Reference.md',
-		// 		use_eval: true,
-		// 		out: { filename: 'docs/guides/Command Reference.md' },
-		// 	}
-		// },
-
-		// Generate: readme.md
-		{
-			$ExecuteEjs: {
-				ejs_file: 'docs/templates/readme.md',
-				use_eval: true,
-				// debug_script: { filename: 'docs/templates/readme.md.script.js' },
-				out: { filename: 'docs/external/readme.md' },
-			}
-		},
-		{ $CopyFile: { from: 'docs/external/readme.md', to: 'readme.md' } },
-
-		// Generate: version.md
-		{
-			$ExecuteEjs: {
-				ejs_string: '<%- Context.Package.version %>',
-				use_eval: true,
-				out: { filename: 'docs/external/version.md' },
-			}
-		},
-		{ $CopyFile: { from: 'docs/external/version.md', to: 'version.md' } },
-
-		// Copy other files to the docs external area.
-		{ $EnsureFolder: { folder: 'docs/external' } },
-		{ $CopyFile: { from: 'license.md', to: 'docs/external/license.md' } },
-		{ $CopyFile: { from: 'history.md', to: 'docs/external/history.md' } },
-		{ $CopyFile: { from: 'tests.md', to: 'docs/external/tests.md' } },
-
-	],
+	// build_docs lives in jsonstor-docs now.
+	//
+	// It was defined here and referred to docs/templates/readme.md in a repository which has
+	// no docs/ folder, so it could never have run - which is why every caller below had it
+	// commented out. This repository's readme.md is generated from the adapter inventory at
+	// jsonstor-docs/docs/data/adapters.js. Edit it there.
 
 	run_webpack: [
 

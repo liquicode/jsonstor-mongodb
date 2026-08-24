@@ -28,15 +28,16 @@
         "mongo query"
     ],
     "devDependencies": {
-        "@liquicode/devops": "^0.0.20",
+        "@liquicode/devops": "^0.0.21",
+        "@liquicode/jsonstor-docs": "^0.1.0",
         "mocha": "^10.2.0",
         "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4",
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
-        "@liquicode/jsongin": "^0.0.20",
-        "@liquicode/jsonstor": "^0.0.20",
+        "@liquicode/jsongin": "^0.1.0",
+        "@liquicode/jsonstor": "^0.1.0",
         "mongodb": "^4.6.0"
     }
 }
