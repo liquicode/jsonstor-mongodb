@@ -4,7 +4,7 @@
 
 > Home: [http://jsonstor.liquicode.com](http://jsonstor.liquicode.com)
 >
-> Version: 0.0.21
+> Version: 0.1.0
 
 ### Documents are stored on a MongoDB server.
 
