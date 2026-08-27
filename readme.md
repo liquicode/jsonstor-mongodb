@@ -63,7 +63,7 @@ Storage Interface
 ---------------------------------------------------------------------
 
 Every adapter implements the same functions, and they are documented once:
-  [Storage Interface](http://jsonstor.liquicode.com/#/guides/Storage%20Interface.md).
+  [Storage Interface](http://jsonstor.liquicode.com/#/guides/Storage-Interface.md).
 
 ***The operator list is not repeated here.*** A criteria, a projection, and an update are
   the engine's, and the list changes whenever the engine gains an operator - a copy in this
