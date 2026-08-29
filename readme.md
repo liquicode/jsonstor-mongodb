@@ -55,7 +55,8 @@ Peculiarities
 ---------------------------------------------------------------------
 
 - ***This adapter is the reference the others are measured against.*** `jsonstor` establishes what correct means by running the shared inventory through this adapter against a live server, and comparing every other storage to that result. Where they disagree, the other adapter is wrong.
-- ***Criteria are handed to the MongoDB driver, not to `jsongin`.*** The operators a query may use are the operators the server implements, which is why this adapter is the baseline rather than a participant.
+- ***Almost every criteria is handed to the MongoDB driver whole.*** Twenty seven of `jsongin`'s thirty one query operators are MongoDB's own, so the server decides the criteria, sorts it, limits it and mutates by it - which is why this adapter is the baseline rather than a participant.
+- ***The four `jsongin` extensions are the exception, and they are settled here.*** MongoDB has no `$eqx`, `$nex`, `$exprx` or `$noop` and answers `unknown operator` rather than an empty result. `MangoExpression` keeps them out of what is sent, the server narrows the search with the rest, and `jsongin` decides the answer - the same two stage arrangement every other adapter uses, entered only when it is needed.
 - The database and the collection are created on the first storage call if they do not exist.
 - All three settings are required, and the adapter throws if any is missing or is not a string.
 

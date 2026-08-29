@@ -79,6 +79,56 @@ module.exports = {
 		};
 
 
+
+		//=====================================================================
+		// ***The criteria the driver is actually given.***
+		//
+		// This adapter used to hand Criteria straight to the driver, which is right for every
+		// criteria MongoDB can read and wrong for the four jsongin extensions it cannot:
+		// $eqx, $nex, $exprx and $noop came back as `unknown operator`, not as an empty
+		// result. MangoExpression is what tells the two apart.
+		//
+		// ***When the translation is exact, this is the pushdown and nothing else happens.***
+		// That is the ordinary case - twenty seven of jsongin's thirty one query operators are
+		// MongoDB's own - and it is the behavior this adapter has always had, minus the
+		// assumption. One pure function call, no extra round trip, and the server still
+		// decides, sorts, limits and mutates.
+		//
+		// ***When it is not exact, the matching _ids are resolved first.*** The pushdown is a
+		// broadening, so what it returns is a superset; jsongin decides which of those the
+		// criteria actually admits, and the driver is then given `{ _id: { $in: [ ... ] } }`,
+		// which is exact by construction.
+		//
+		// ***Resolving to _ids rather than filtering in place is what makes the mutations
+		// correct too.*** updateMany and deleteMany hand a criteria to the server and never see
+		// a document, so there is no later pass where a residual could be applied - the only
+		// place to be careful is before the statement goes out. It costs one extra round trip
+		// on a path which used to raise an error, which is not a trade worth splitting into
+		// two mechanisms.
+		async function resolve_criteria( Collection, Criteria )
+		{
+			let translation = jsonstor.MangoExpression.Translate( { Criteria: Criteria } );
+			if ( translation.Residual === null ) { return translation.Pushdown; }
+			// ***A malformed criteria is refused before anything is read.*** jsongin refuses a
+			// criteria which is not an object, or which names an operator that does not exist,
+			// and putting it one empty document is the cheapest way to ask. Waiting for the
+			// loop below would make the refusal depend on the collection holding something -
+			// so `FindMany( { $nope: 1 } )` would throw against a full collection and answer
+			// [] against an empty one, which is the ambiguity the contract forbids.
+			jsongin.Query( {}, translation.Residual );
+			// The whole document is read rather than a projection of it: the residual may test
+			// any field, and a projection would hide the ones it asks about.
+			let db_cursor = await Collection.find( translation.Pushdown );
+			if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection while resolving a criteria.` ); }
+			let documents = await db_cursor.toArray();
+			let ids = [];
+			for ( let index = 0; index < documents.length; index++ )
+			{
+				if ( jsongin.Query( documents[ index ], translation.Residual ) ) { ids.push( documents[ index ]._id ); }
+			}
+			return { _id: { $in: ids } };
+		}
+
 		//=====================================================================
 		// DropStorage
 		//=====================================================================
@@ -159,6 +209,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let count = await Collection.countDocuments( Criteria );
 								resolve( count );
 							}
@@ -283,6 +334,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let document = await Collection.findOne( Criteria, Projection );
 								// let document = await Collection.findOne( Criteria ).project( Projection );
 								resolve( document );
@@ -314,6 +366,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let db_cursor = await Collection.find( Criteria ).project( Projection );
 								if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during FindMany.` ); }
 								let documents = await db_cursor.toArray();
@@ -346,6 +399,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let db_cursor = await Collection.find( Criteria ).project( Projection );
 								if ( db_cursor && Sort ) { db_cursor = await db_cursor.sort( Sort ); };
 								if ( db_cursor && MaxCount && ( MaxCount > 0 ) ) { db_cursor = await db_cursor.limit( MaxCount ); };
@@ -380,6 +434,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let modified_id = null;
 								if ( Options.ReturnDocuments )
 								{
@@ -435,6 +490,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let modified_ids = [];
 								if ( Options.ReturnDocuments )
 								{
@@ -453,7 +509,17 @@ module.exports = {
 									if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during UpdateMany.` ); }
 									modified = await db_cursor.toArray();
 								}
-								if ( modified.length !== modified_count ) { throw new Error( `Internal modified count mismatch during UpdateMany.` ); }
+								// ***The cross check only means anything when the documents were fetched.***
+								// Without ReturnDocuments nothing populates `modified`, so an empty array
+								// was being compared against a real modified count and every UpdateMany
+								// which changed a document threw. ReplaceOne guards the same check the
+								// same way, ten lines further down, and is what this was measured against.
+								// Found on 2026-08-28: no test had ever called UpdateMany without asking
+								// for the documents back.
+								if ( Options.ReturnDocuments )
+								{
+									if ( modified.length !== modified_count ) { throw new Error( `Internal modified count mismatch during UpdateMany.` ); }
+								}
 								if ( Options.ReturnDocuments )
 								{
 									resolve( modified );
@@ -490,6 +556,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let modified_id = null;
 								if ( Options.ReturnDocuments )
 								{
@@ -542,6 +609,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let modified = null;
 								if ( Options.ReturnDocuments )
 								{
@@ -586,6 +654,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								Criteria = await resolve_criteria( Collection, Criteria );
 								let modified = [];
 								if ( Options.ReturnDocuments )
 								{
@@ -615,6 +684,46 @@ module.exports = {
 				} );
 		};
 
+
+
+		//=====================================================================
+		// MangoTranslation
+		//
+		// ***What a Mango-translating adapter advertises beyond the Storage interface.***
+		// Its presence is the capability declaration, the same way Storage.SqlTranslation is in
+		// the two SQL adapters: a suite asks the constructed Storage rather than consulting a
+		// list somewhere which could disagree with it. Constructing a Storage opens no
+		// connection, so the question is answerable while the server is down.
+		//
+		// ***There is no Dialect() here because this adapter narrows nothing.*** MongoDB is the
+		// vocabulary MangoExpression was measured against, so its ceiling is this adapter's
+		// vocabulary exactly. A narrower Mango speaker - CouchDB, PouchDB - would declare
+		// OperatorFidelities here and get the same translator, which is the point of the
+		// option existing.
+		//=====================================================================
+
+		Storage.MangoTranslation = {
+			TranslatorName: 'MangoExpression',
+
+			// The options this adapter translates with. A copy, so a caller cannot alter them.
+			Options: function () { return {}; },
+
+			// ***Whether a criteria is decided by the server alone.*** A caller which wants to
+			// know before it asks - a suite measuring absorption, a caller choosing between a
+			// server-side mutation and reading the documents back - asks here rather than
+			// reaching for the translator itself and guessing at the options.
+			Absorbs: function ( Criteria )
+			{
+				return ( jsonstor.MangoExpression.Translate( { Criteria: Criteria } ).Residual === null );
+			},
+
+			// The query the driver would be given for a criteria this adapter absorbs entirely.
+			// Pure: it opens no connection and reads no document.
+			Pushdown: function ( Criteria )
+			{
+				return jsonstor.MangoExpression.Translate( { Criteria: Criteria } ).Pushdown;
+			},
+		};
 
 		//=====================================================================
 		return Storage;
