@@ -27,7 +27,7 @@
         "mongo query"
     ],
     "devDependencies": {
-        "@liquicode/devops": "^0.0.21",
+        "@liquicode/devops": "^0.1.0",
         "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4",
         "webpack-node-externals": "^3.0.0"
