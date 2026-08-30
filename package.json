@@ -16,6 +16,16 @@
         }
     ],
     "main": "src/jsonstor-mongodb.js",
+    "types": "./types/jsonstor-mongodb.d.ts",
+    "exports": {
+        ".": {
+            "types": "./types/jsonstor-mongodb.d.ts",
+            "import": "./src/jsonstor-mongodb.mjs",
+            "require": "./src/jsonstor-mongodb.js",
+            "default": "./src/jsonstor-mongodb.js"
+        },
+        "./package.json": "./package.json"
+    },
     "type": "commonjs",
     "scripts": {
         "publish version": "npx @liquicode/devops --tasks .\\build\\devops.tasks.js publish_version",
