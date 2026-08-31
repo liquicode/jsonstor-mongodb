@@ -105,10 +105,23 @@ module.exports = {
 		// place to be careful is before the statement goes out. It costs one extra round trip
 		// on a path which used to raise an error, which is not a trade worth splitting into
 		// two mechanisms.
-		async function resolve_criteria( Collection, Criteria )
+		// Options carries the statistics collector for this one call. See
+		// jsonstor/src/jsonstor/Statistics.js.
+		async function resolve_criteria( Collection, Criteria, Options )
 		{
 			let translation = jsonstor.MangoExpression.Translate( { Criteria: Criteria } );
-			if ( translation.Residual === null ) { return translation.Pushdown; }
+			if ( translation.Residual === null )
+			{
+				// ***The exact branch, where the server does all of it.*** The row counts are not
+				// known here - the caller has not run the query yet - so report_rows completes
+				// this from what came back.
+				jsonstor.ReportStatistics( Options, {
+					Translator: 'MangoExpression',
+					Pushdown: translation.Pushdown,
+					Residual: null,
+				} );
+				return translation.Pushdown;
+			}
 			// ***A malformed criteria is refused before anything is read.*** jsongin refuses a
 			// criteria which is not an object, or which names an operator that does not exist,
 			// and putting it one empty document is the cheapest way to ask. Waiting for the
@@ -126,8 +139,39 @@ module.exports = {
 			{
 				if ( jsongin.Query( documents[ index ], translation.Residual ) ) { ids.push( documents[ index ]._id ); }
 			}
+			// ***The broadening branch, where both numbers are known.*** documents came back from
+			// the pushdown and ids are the ones jsongin kept, which is the two stage model with
+			// the split visible.
+			jsonstor.ReportStatistics( Options, {
+				Translator: 'MangoExpression',
+				Pushdown: translation.Pushdown,
+				PushdownRows: documents.length,
+				Residual: translation.Residual,
+				ResidualRows: ids.length,
+			} );
 			return { _id: { $in: ids } };
 		}
+
+		//=====================================================================
+		// Completes the measurement for the branch which could not finish it.
+		//
+		// ***resolve_criteria knows the row counts only when it broadens.*** On that branch
+		// it reads the documents itself, so it reports both numbers and this leaves them
+		// alone. On the exact branch the server answers the criteria directly and nothing
+		// has counted anything yet - what came back is then both the rows which travelled
+		// and the rows which matched, because there was no second stage to remove any.
+		//=====================================================================
+
+
+		function report_rows( Options, Returned )
+		{
+			let reported = jsonstor.ReadStatistics( Options );
+			if ( !reported ) { return; }
+			if ( reported.Residual !== null ) { return; }
+			jsonstor.ReportStatistics( Options, { PushdownRows: Returned, ResidualRows: Returned } );
+			return;
+		}
+
 
 		//=====================================================================
 		// DropStorage
@@ -209,8 +253,9 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let count = await Collection.countDocuments( Criteria );
+								report_rows( Options, count );
 								resolve( count );
 							}
 							catch ( error )
@@ -334,8 +379,9 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let document = await Collection.findOne( Criteria, Projection );
+								report_rows( Options, document ? 1 : 0 );
 								// let document = await Collection.findOne( Criteria ).project( Projection );
 								resolve( document );
 							}
@@ -366,10 +412,11 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let db_cursor = await Collection.find( Criteria ).project( Projection );
 								if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during FindMany.` ); }
 								let documents = await db_cursor.toArray();
+								report_rows( Options, documents.length );
 								resolve( documents );
 							}
 							catch ( error )
@@ -399,12 +446,13 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let db_cursor = await Collection.find( Criteria ).project( Projection );
 								if ( db_cursor && Sort ) { db_cursor = await db_cursor.sort( Sort ); };
 								if ( db_cursor && MaxCount && ( MaxCount > 0 ) ) { db_cursor = await db_cursor.limit( MaxCount ); };
 								if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during FindMany.` ); }
 								let documents = await db_cursor.toArray();
+								report_rows( Options, documents.length );
 								resolve( documents );
 							}
 							catch ( error )
@@ -434,7 +482,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let modified_id = null;
 								if ( Options.ReturnDocuments )
 								{
@@ -490,7 +538,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let modified_ids = [];
 								if ( Options.ReturnDocuments )
 								{
@@ -556,7 +604,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let modified_id = null;
 								if ( Options.ReturnDocuments )
 								{
@@ -609,7 +657,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let modified = null;
 								if ( Options.ReturnDocuments )
 								{
@@ -654,7 +702,7 @@ module.exports = {
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
-								Criteria = await resolve_criteria( Collection, Criteria );
+								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let modified = [];
 								if ( Options.ReturnDocuments )
 								{
