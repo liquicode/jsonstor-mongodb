@@ -59,7 +59,10 @@ module.exports = {
 						// Get the collection.
 						let collection = database.collection( Settings.CollectionName );
 						// Do the stuff.
-						let result = await Handler( collection );
+						// ***The database is handed over too***, because StorageInfo asks the
+						// server a question about itself rather than about a collection. Every
+						// other handler takes the first argument and ignores this one.
+						let result = await Handler( collection, database );
 						resolve( result );
 					}
 					catch ( error )
@@ -176,6 +179,24 @@ module.exports = {
 		//=====================================================================
 		// DropStorage
 		//=====================================================================
+
+
+		// ***What this storage is actually talking to.*** The host and port live inside the
+		// connection string here rather than in settings of their own, so that string is the
+		// honest endpoint.
+		Storage.StorageInfo = async function ( Options )
+		{
+			return await WithStorage(
+				async function ( collection, database )
+				{
+					let build = await database.admin().buildInfo();
+					return jsonstor.BuildStorageInfo( Storage, {
+						Product: 'MongoDB',
+						Version: build.version || '',
+						Endpoint: Storage.Settings.ConnectionString || '',
+					} );
+				} );
+		};
 
 
 		Storage.DropStorage = async function ( Options ) 
