@@ -9,9 +9,9 @@ Every test in this family lives in [`@liquicode/jsonstor-docs`](https://github.c
 
 ## Engine Tests
 
-| Engine           |            A |            B |           C |            D |           E |          F |            M |            N |           Z |              Total |
-|------------------|-------------:|-------------:|------------:|-------------:|------------:|-----------:|-------------:|-------------:|------------:|-------------------:|
-| jsonstor-mongodb | 10/0 (8.88s) | 27/0 (904ms) | 7/0 (2.49s) | 14/0 (376ms) | 6/0 (269ms) | 3/0 (54ms) | 26/0 (389ms) | 39/0 (1.02s) | 2/0 (244ms) | **134/0** (14.63s) |
+| Engine           |             A |            B |           C |            D |           E |          F |           G |            M |            N |           Z |              Total |
+|------------------|--------------:|-------------:|------------:|-------------:|------------:|-----------:|------------:|-------------:|-------------:|------------:|-------------------:|
+| jsonstor-mongodb | 10/0 (10.26s) | 27/0 (1.05s) | 7/0 (2.84s) | 14/0 (418ms) | 6/0 (303ms) | 3/0 (64ms) | 6/0 (1.25s) | 26/0 (463ms) | 39/0 (1.15s) | 2/0 (283ms) | **140/0** (18.07s) |
 
 Each cell is ***passing/failing (duration)***.
 
@@ -23,6 +23,7 @@ Each cell is ***passing/failing (duration)***.
 | D      | Engine Contract Tests      |
 | E      | Extension Operator Tests   |
 | F      | Pushdown Tests             |
+| G      | Mango Acceptance Tests     |
 | M      | MongoDB Tutorial           |
 | N      | MongoDB Reference          |
 | Z      | Ad-Hoc Tests               |
