@@ -443,9 +443,17 @@ module.exports = {
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
 								Criteria = await resolve_criteria( Collection, Criteria, Options );
-								let document = await Collection.findOne( Criteria, Projection );
+								// ***The projection is an option here and an argument in FindMany.***
+								// findOne's second parameter is a FindOptions, so a projection document
+								// passed there was read as options nobody declared and dropped without
+								// a word - every FindOne on this adapter answered the whole document.
+								// A dead line beside it proposed .findOne( Criteria ).project( ... ),
+								// which cannot work either: find() answers a cursor which takes
+								// .project(), findOne answers a document which does not. Fixed 2026-09-04.
+								let find_options = {};
+								if ( jsongin.ShortType( Projection ) === 'o' ) { find_options.projection = Projection; }
+								let document = await Collection.findOne( Criteria, find_options );
 								report_rows( Options, document ? 1 : 0 );
-								// let document = await Collection.findOne( Criteria ).project( Projection );
 								resolve( document );
 							}
 							catch ( error )
