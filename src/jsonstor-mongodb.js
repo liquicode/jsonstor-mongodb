@@ -37,7 +37,7 @@ module.exports = {
 		async function WithStorage( Handler )
 		{
 			return new Promise(
-				async ( resolve, reject ) =>
+				async function ( resolve, reject )
 				{
 					let database = null;
 					let client = null;
@@ -199,13 +199,45 @@ module.exports = {
 		};
 
 
+		//=====================================================================
+		// What the identity settings resolved to.
+		//
+		// ***MongoDB is the one adapter with nothing to resolve.*** The identifier is `_id` by
+		// the server's own rule, it is minted by the driver when a document arrives without one,
+		// and the server refuses a change to it - which is the behavior the rest of the family
+		// has just been brought round to. There is no IdField here and there never was.
+		Storage.PrimaryKeyInfo = {
+			Fields: [ '_id' ],
+			// The medium holds the true type: an ObjectId, a string, or a number, as written.
+			Types: [],
+			Mutable: false,
+			Generated: true,
+			IndexHostedBy: 'database',
+		};
+
+
+		//=====================================================================
+		// RefreshIndex
+		//=====================================================================
+
+
+		// ***A no-op which answers 0, and means it.*** The index is the collection's own `_id`
+		// index and the server maintains it; there is nothing here which could go stale. It is
+		// implemented rather than left to the interface stub because the stub throws, and an
+		// adapter with no index to refresh is not an adapter which forgot to write this.
+		Storage.RefreshIndex = async function ( Options )
+		{
+			return 0;
+		};
+
+
 		Storage.DropStorage = async function ( Options ) 
 		{
 			return await WithStorage(
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -241,7 +273,7 @@ module.exports = {
 		Storage.FlushStorage = async function ( Options ) 
 		{
 			return new Promise(
-				async ( resolve, reject ) =>
+				async function ( resolve, reject )
 				{
 					try
 					{
@@ -269,7 +301,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -301,7 +333,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -344,11 +376,21 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
 								if ( jsongin.ShortType( Options ) !== 'o' ) { Options = {}; }
+								// ***An empty insert is nothing to do, not something to refuse.***
+								// The driver rejects an empty array outright, where every other
+								// adapter in the family answers 0 - so this is the one engine which
+								// turned InsertMany( [] ) into an error. Answered here rather than
+								// sent, because there is nothing to send.
+								if ( Documents.length === 0 )
+								{
+									resolve( Options.ReturnDocuments ? [] : 0 );
+									return;
+								}
 								let db_response = await Collection.insertMany( Documents );
 								if ( !db_response.acknowledged ) { throw new Error( 'The MongoDB Server did not acknowledge the insertion.' ); }
 								let modified_count = db_response.insertedCount;
@@ -395,7 +437,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -428,7 +470,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -462,7 +504,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -498,7 +540,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -554,7 +596,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -566,7 +608,7 @@ module.exports = {
 									let db_cursor = await Collection.find( Criteria ).project( { _id: 1 } );
 									if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during UpdateMany.` ); }
 									modified_ids = await db_cursor.toArray();
-									modified_ids = modified_ids.map( element => element._id );
+									modified_ids = modified_ids.map( function ( Element ) { return Element._id; } );
 								}
 								let db_response = await Collection.updateMany( Criteria, Update );
 								if ( !db_response.acknowledged ) { throw new Error( `Database did not acknowledge the update.` ); }
@@ -620,7 +662,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -673,7 +715,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
@@ -718,7 +760,7 @@ module.exports = {
 				async function ( Collection )
 				{
 					return new Promise(
-						async ( resolve, reject ) =>
+						async function ( resolve, reject )
 						{
 							try
 							{
