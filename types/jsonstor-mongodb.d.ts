@@ -41,10 +41,14 @@ declare module '@liquicode/jsonstor-mongodb'
 
 	export interface StorageAdapter
 	{
-		/** Always `'jsonstor-mongodb'`. The name this adapter registers under. */
+		/** `'jsonstor-mongodb'`. The package's bare name, which `Aliases` maps onto a prime. */
 		AdapterName: string;
 		AdapterDescription: string;
 		GetAdapter( jsonstor: any, Settings: AdapterSettings ): Storage;
+		/** This package's prime versions, each registering under its own name. */
+		Adapters: StorageAdapter[];
+		/** Every other name this package answers to, mapped to the prime it resolves to. */
+		Aliases: { [ AliasName: string ]: string };
 	}
 
 
@@ -61,5 +65,7 @@ declare module '@liquicode/jsonstor-mongodb'
 	export const AdapterName: string;
 	export const AdapterDescription: string;
 	export const GetAdapter: StorageAdapter[ 'GetAdapter' ];
+	export const Adapters: StorageAdapter[ 'Adapters' ];
+	export const Aliases: StorageAdapter[ 'Aliases' ];
 
 }

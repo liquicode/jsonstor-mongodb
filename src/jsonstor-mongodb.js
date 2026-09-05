@@ -851,3 +851,64 @@ module.exports = {
 };
 
 
+//---------------------------------------------------------------------
+// ***This package is one prime and five aliases.***
+//
+// ***Measured on 2026-09-04 against six servers*** - 3.6.23, 4.4.29, 5.0.31, 6.0.28, 7.0.40
+// and 8.3.8 - each put every jsongin query operator over a corpus of types, arrays,
+// sub-documents and an absent field. ***Five of the six answered identically***, and
+// identically to `jsongin` itself, so a prime for each would assert differences which do not
+// exist. This is the same reasoning which gave `jsonstor-couchdb` one prime for two major
+// versions.
+//
+// ***The floor is 4.4 and it was found by standing the older server up.*** MongoDB 3.6
+// refuses `$sampleRate` outright - *unknown top level operator* - because the operator
+// arrived in 4.4. That is the only difference anywhere in the range, and it is a real one:
+// it is the boundary this package had never had a reason to look for, in the one adapter
+// whose vocabulary is the ceiling every other Mango speaker is measured against.
+//
+// ***3.6 is not given a prime of its own.*** *(User decision, 2026-09-04.)* It would be a
+// permanent test obligation for a server EOL since 2021, and the profile is available -
+// `OperatorFidelities: { '$sampleRate': 'dropped' }` - should that change. The container is
+// kept ***stopped*** as the evidence the floor was measured rather than chosen, which is what
+// `postgresql-v9.6.24` and `oracle-v11.2` are for. A 3.6 server now meets a boundary error
+// naming both sides instead of a silent wrong answer on one operator.
+//
+// ***The driver reaches every one of them, which was the open question.*** This package pins
+// `mongodb ^4.6.0` and resolves 4.17.2, whose published compatibility matrix stops at server
+// 6.0 - so 7.0 and 8.3 were expected to need a driver major. They did not: the matrix is a
+// support statement, and over the surface this adapter uses it is not a wall. ***Recorded
+// because the opposite has been true twice in this family*** - `node-oracledb` set Oracle's
+// floor and Microsoft set MS Sql Server's - and a layer which turns out not to be the
+// constraint is worth writing down as plainly as one which does.
+//
+// See jsonx/.plans/dialect-boundaries.md and jsonx/.plans/versioned-adapters.md.
+
+const MONGODB_V44 = {
+	AdapterName: 'jsonstor-mongodb-v4.4',
+	AdapterDescription: module.exports.AdapterDescription,
+	GetAdapter: module.exports.GetAdapter,
+	// ***The floor this profile starts at.*** 4.4 is where `$sampleRate` arrives, measured
+	// against 3.6.23 refusing it and 4.4.29 accepting it.
+	Version: [ 4, 4 ],
+	// ***The newest server it has been run against.*** Every part of it, because the
+	// comparison zero-pads and a short ceiling makes a prime warn about its own test server.
+	MeasuredTo: [ 8, 3, 8 ],
+};
+
+module.exports.Adapters = [ MONGODB_V44 ];
+
+// ***The bare name is listed here rather than left on the plugin object.*** Naming
+// `jsonstor-mongodb` stops the plugin registering itself under it, so `GetStorage` reports the
+// prime it resolved to instead of reporting itself as its own profile.
+//
+// ***`v8.3` rather than `v8.0`, because the tag lies.*** `mongo:8` reports 8.3.8, the same way
+// `redis:8` reports 8.10.1 and `gvenzl/oracle-free:23` reports 23.26. A name here is the
+// version a server actually reported.
+module.exports.Aliases = {
+	'jsonstor-mongodb': 'jsonstor-mongodb-v4.4',
+	'jsonstor-mongodb-v5.0': 'jsonstor-mongodb-v4.4',
+	'jsonstor-mongodb-v6.0': 'jsonstor-mongodb-v4.4',
+	'jsonstor-mongodb-v7.0': 'jsonstor-mongodb-v4.4',
+	'jsonstor-mongodb-v8.3': 'jsonstor-mongodb-v4.4',
+};

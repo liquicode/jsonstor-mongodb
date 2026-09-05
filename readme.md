@@ -42,6 +42,28 @@ let storage = jsonstor.GetStorage( 'jsonstor-mongodb', {
 } );
 ```
 
+Versions
+---------------------------------------------------------------------
+
+This package answers to more than one name. Pass any of these to `GetStorage()`;
+  a name which is not listed is refused.
+
+| Name | Dialect it uses | Measured against |
+|------|-----------------|------------------|
+| `jsonstor-mongodb-v4.4` | its own | - |
+| `jsonstor-mongodb` | `jsonstor-mongodb-v4.4` | - |
+| `jsonstor-mongodb-v5.0` | `jsonstor-mongodb-v4.4` | - |
+| `jsonstor-mongodb-v6.0` | `jsonstor-mongodb-v4.4` | 6.0 |
+| `jsonstor-mongodb-v7.0` | `jsonstor-mongodb-v4.4` | 7.0 |
+| `jsonstor-mongodb-v8.3` | `jsonstor-mongodb-v4.4` | 8.3 |
+
+A name with its own dialect was measured against that server version and covers every
+  later one up to the next such name. The rest resolve to one of those. The bare name
+  follows the newest dialect this package carries, which is what most callers want.
+
+A name whose dialect your server cannot serve is refused on the first operation, naming
+  the version you asked for and the one the server needs.
+
 Settings
 ---------------------------------------------------------------------
 
