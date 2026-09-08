@@ -50,9 +50,9 @@ This package answers to more than one name. Pass any of these to `GetStorage()`;
 
 | Name | Dialect it uses | Measured against |
 |------|-----------------|------------------|
-| `jsonstor-mongodb-v4.4` | its own | - |
+| `jsonstor-mongodb-v4.4` | its own | 4.4 |
 | `jsonstor-mongodb` | `jsonstor-mongodb-v4.4` | - |
-| `jsonstor-mongodb-v5.0` | `jsonstor-mongodb-v4.4` | - |
+| `jsonstor-mongodb-v5.0` | `jsonstor-mongodb-v4.4` | 5.0 |
 | `jsonstor-mongodb-v6.0` | `jsonstor-mongodb-v4.4` | 6.0 |
 | `jsonstor-mongodb-v7.0` | `jsonstor-mongodb-v4.4` | 7.0 |
 | `jsonstor-mongodb-v8.3` | `jsonstor-mongodb-v4.4` | 8.3 |
