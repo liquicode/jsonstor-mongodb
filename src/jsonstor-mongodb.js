@@ -506,7 +506,7 @@ module.exports = {
 		//=====================================================================
 
 
-		Storage.FindMany2 = async function FindMany2( Criteria, Projection, Sort, MaxCount, Options ) 
+		Storage.FindMany2 = async function FindMany2( Criteria, Projection, Sort, Paging, Options ) 
 		{
 			return await WithStorage(
 				async function ( Collection )
@@ -520,7 +520,9 @@ module.exports = {
 								Criteria = await resolve_criteria( Collection, Criteria, Options );
 								let db_cursor = await Collection.find( Criteria ).project( Projection );
 								if ( db_cursor && Sort ) { db_cursor = await db_cursor.sort( Sort ); };
-								if ( db_cursor && MaxCount && ( MaxCount > 0 ) ) { db_cursor = await db_cursor.limit( MaxCount ); };
+								let paging = jsonstor.Paging.Normalize( Paging );
+								if ( db_cursor && ( paging.SkipCount > 0 ) ) { db_cursor = await db_cursor.skip( paging.SkipCount ); };
+								if ( db_cursor && ( paging.MaxCount > 0 ) ) { db_cursor = await db_cursor.limit( paging.MaxCount ); };
 								if ( !db_cursor ) { throw new Error( `Unable to obtain a cursor on the collection during FindMany.` ); }
 								let documents = await db_cursor.toArray();
 								report_rows( Options, documents.length );
