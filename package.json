@@ -1,6 +1,6 @@
 {
     "name": "@liquicode/jsonstor-mongodb",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "A jsonstor adapter which stores documents on a MongoDB server.",
     "license": "MIT",
     "engines": {
@@ -53,8 +53,8 @@
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
-        "@liquicode/jsongin": "^0.1.0",
-        "@liquicode/jsonstor": "^0.1.0",
+        "@liquicode/jsongin": "^0.2.0",
+        "@liquicode/jsonstor": "^0.2.0",
         "mongodb": "^4.6.0"
     }
 }
