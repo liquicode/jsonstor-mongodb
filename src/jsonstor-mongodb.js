@@ -92,7 +92,7 @@ module.exports = {
 		// result. MangoExpression is what tells the two apart.
 		//
 		// ***When the translation is exact, this is the pushdown and nothing else happens.***
-		// That is the ordinary case - twenty seven of jsongin's thirty one query operators are
+		// That is the ordinary case - twenty eight of jsongin's thirty two query operators are
 		// MongoDB's own - and it is the behavior this adapter has always had, minus the
 		// assumption. One pure function call, no extra round trip, and the server still
 		// decides, sorts, limits and mutates.
